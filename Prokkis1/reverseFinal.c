@@ -451,4 +451,5 @@ int main(int argc, char *argv[])
     {
         appendFile(argv[1], argv[2]);
     }
+    return 0;
 }
