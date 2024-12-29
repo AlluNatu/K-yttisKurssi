@@ -130,15 +130,14 @@ int main(int argc, char *argv[])
             }
         }
         // Reallocates the memory to dynamically make it use only the amount of memory that is needed.
-        lines = realloc(lines, sizeof(char *) * lineCount);
-        if (!lines)
-        {
-            fprintf(stderr, "realloc failed\n");
-            fclose(file);
-            exit(1);
-        }
+            lines = realloc(lines, sizeof(char *) * lineCount + 1);
+            if (!lines) {
+                fprintf(stderr, "realloc failed\n");
+                fclose(file);
+                exit(1);
+            }
 
-        // Program prints the strings from inside the list in order. Also it frees up the space that is allocated for the strings inside the list.
+        // Program prints the strings from inside the list in reverse order. Also it frees up the space that is allocated for the strings inside the list.
         for (int i = 0; i < lineCount; i++)
         {
             fprintf(stdout, "%s", lines[i]);
