@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <libgen.h>
 // Used dynamic memory allocation from: https://www.youtube.com/watch?v=vQno9S3yF80
 
 // Defining the max values for lines and character lenghts. These will be used later when dynamically allocating memory.
@@ -17,7 +18,7 @@ void printFile(char filename[MAX])
     // Opening the input file. If file cannot be opened it gives error and terminates the program.
     if ((file = fopen(filename, "r")) == NULL)
     {
-        fprintf(stderr, "Error: cannot open file '%s'\n", filename);
+        fprintf(stderr, "error: cannot open file '%s'\n", filename);
         exit(1);
     }
     // Defining a variable for the list. It has 2 pointers for it points at a index inside of a index in the list.
@@ -44,7 +45,7 @@ void printFile(char filename[MAX])
 
         if (ferror(file))
         {
-            fprintf(stderr, "Error reading character\n");
+            fprintf(stderr, "error reading character\n");
             exit(1);
         }
         // If program finds the end of the file it dynamically allocates memory for the last string in the list, terminates the program and closes the file if there is an error. Makes sure that the last character in said string is null terminator also. Breaks the loop as it has found the end of the file.
@@ -129,7 +130,7 @@ void printFile(char filename[MAX])
         }
     }
     // Reallocates the memory to dynamically make it use only the amount of memory that is needed.
-    lines = realloc(lines, sizeof(char *) * lineCount);
+    lines = realloc(lines, sizeof(char *) * lineCount + 1);
     if (!lines)
     {
         fprintf(stderr, "realloc failed\n");
@@ -154,7 +155,9 @@ void printFile(char filename[MAX])
 void appendFile(char inputFilename[MAX], char outputFilename[MAX])
 {
     // Checks that the outputfile and inputfile are not the same
-    if (strcmp(inputFilename, outputFilename) == 0)
+    char *baseName1 = basename(inputFilename);
+    char *baseName2 = basename(outputFilename);
+    if (strcmp(baseName1, baseName2) == 0)
     {
         fprintf(stderr, "Input and output file must differ\n");
         exit(1);
@@ -166,13 +169,13 @@ void appendFile(char inputFilename[MAX], char outputFilename[MAX])
     // Opening the input file. If file cannot be opened it gives error and terminates the program.
     if ((inputFile = fopen(inputFilename, "r")) == NULL)
     {
-        fprintf(stderr, "Error: cannot open file '%s'\n", inputFilename);
+        fprintf(stderr, "error: cannot open file '%s'\n", inputFilename);
         exit(1);
     }
     // Opening the output file. If file cannot be opened it gives error and terminates the program.
     if ((outputFile = fopen(outputFilename, "w")) == NULL)
     {
-        fprintf(stderr, "Error: cannot open file '%s'\n", outputFilename);
+        fprintf(stderr, "error: cannot open file '%s'\n", outputFilename);
         exit(1);
     }
 
@@ -201,7 +204,7 @@ void appendFile(char inputFilename[MAX], char outputFilename[MAX])
 
         if (ferror(inputFile))
         {
-            fprintf(stderr, "Error reading character\n");
+            fprintf(stderr, "error reading character\n");
             exit(1);
         }
         // If program finds the end of the file it dynamically allocates memory for the last string in the list, terminates the program and closes the file if there is an error. Makes sure that the last character in said string is null terminator also. Breaks the loop as it has found the end of the file.
@@ -286,7 +289,7 @@ void appendFile(char inputFilename[MAX], char outputFilename[MAX])
         }
     }
     // Reallocates the memory to dynamically make it use only the amount of memory that is needed.
-    lines = realloc(lines, sizeof(char *) * lineCount);
+    lines = realloc(lines, sizeof(char *) * lineCount + 1);
     if (!lines)
     {
         fprintf(stderr, "realloc failed\n");
@@ -322,8 +325,8 @@ void zeroArgFunction()
     }
 
     // We print guide for the user
-    fprintf(stdout, "Write words to get in reverse\n");
-    fprintf(stdout, "Enter to stop\n");
+    // fprintf(stdout, "Write words to get in reverse\n");
+    // fprintf(stdout, "Enter to stop\n");
     // Defining starting variables to keepup with the sizes of the list and the string that is inserted into the list. Both are used as indexes.
     size_t lineCount = 0;
     size_t charCount = 0;
@@ -334,6 +337,23 @@ void zeroArgFunction()
     while (true)
     {
         c = getchar();
+
+        if (c == EOF){
+        // If end of file is encountered, process the final line
+            if (charCount != 0)
+            {
+                lines[lineCount] = realloc(lines[lineCount], charCount + 2);
+                if (!lines[lineCount])
+                {
+                    fprintf(stderr, "realloc failed\n");
+                    exit(1);
+                }
+                lines[lineCount][charCount] = '\n';
+                lines[lineCount][charCount] = '\0';
+                lineCount++;
+            }
+            break;
+        }
         // If the latest character the program reads is a newline and a new line it allocates memory for a newline and a null terminate and breaks the loop.
         if (c == '\n' && charCount == 0)
         {
@@ -413,14 +433,14 @@ void zeroArgFunction()
         }
     }
     // Reallocates the memory to dynamically make it use only the amount of memory that is needed.
-    lines = realloc(lines, sizeof(char *) * lineCount);
+    lines = realloc(lines, sizeof(char *) * lineCount + 1);
     if (!lines)
     {
         fprintf(stderr, "realloc failed\n");
         exit(1);
     }
     // Program prints the strings from inside the list in reverse order. Also it frees up the space that is allocated for the strings inside the list.
-    fprintf(stdout, "Here is your input in reverse:\n\n");
+    // fprintf(stdout, "Here is your input in reverse:\n\n");
     for (int i = lineCount - 1; i >= 0; i--)
     {
         fprintf(stdout, "%s", lines[i]);
@@ -436,7 +456,7 @@ int main(int argc, char *argv[])
     if (argc > 3)
     {
         // Provides instructions on how to use the program, if argument amount is too large.
-        fprintf(stdout, "usage: reverse <input> <output>\n");
+        fprintf(stderr, "usage: reverse <input> <output>\n");
         exit(1);
     }
     if (argc == 1)
