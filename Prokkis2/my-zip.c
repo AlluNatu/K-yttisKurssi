@@ -11,6 +11,13 @@
 // Function to concatenate a file/multiple files
 int main(int argc, char *argv[])
 {
+
+    if (argc < 2){
+        fprintf(stderr, "my-zip: file1 [file2 ...]\n");
+        exit(1);
+    }
+    int count = 0;
+    char lastChar = '\0';
     for (int i = 1; i < argc; i++)
     {
         // Defining variable for the file.
@@ -18,7 +25,7 @@ int main(int argc, char *argv[])
         // Opening the input file. If file cannot be opened it gives error and terminates the program.
         if ((file = fopen(argv[i], "r")) == NULL)
         {
-            fprintf(stderr, "my-cat: cannot open file\n");
+            fprintf(stderr, "my-zip: cannot open file\n");
             exit(1);
         }
         // Defining a variable for the list. It has 2 pointers for it points at a index inside of a index in the list.
@@ -54,7 +61,7 @@ int main(int argc, char *argv[])
                 // Checks if the charcount is equal to 0. If it is it skips and if not it makes sure to allocate memory for the last string in the list.
                 if (charCount != 0)
                 {
-                    lines[lineCount] = realloc(lines[lineCount], charCount + 2);
+                    lines[lineCount] = realloc(lines[lineCount], charCount + 1);
                     if (!lines[lineCount])
                     {
                         fprintf(stderr, "realloc failed\n");
@@ -62,8 +69,7 @@ int main(int argc, char *argv[])
                         exit(1);
                     }
 
-                    lines[lineCount][charCount] = '\n';
-                    lines[lineCount][charCount + 1] = '\0';
+                    lines[lineCount][charCount] = '\0';
 
                     lineCount++;
                 }
@@ -137,31 +143,24 @@ int main(int argc, char *argv[])
             fclose(file);
             exit(1);
         }
-        int count = 1;
 
         // Program zips lines using run-length encoding. Frees the lines as we go.
         for (int i = 0; i < lineCount; i++)
         {
-            for (int k = 1; lines[i][k] != '\0'; k++)
-            {
-                if (k > 0 && lines[i][k] == lines[i][k - 1])
-                {
+            for (int k = 0; k < strlen(lines[i]); k++) {
+                if (lastChar == lines[i][k]) {
                     count++;
-                }
-                else
-                {
-                    if (count > 0)
-                    {
+                } else {
+                    if (count > 0) {
                         fwrite(&count, sizeof(int), 1, stdout);
-                        fwrite(&lines[i][k - 1], sizeof(char), 1, stdout);
-                        // fprintf(stdout, "%d", count);
-                        // fprintf(stdout, "%c", lines[i][k-1]);
-                        count = 1;
+                        fwrite(&lastChar, sizeof(char), 1, stdout);
                     }
+                    lastChar = lines[i][k];
+                    count = 1;
                 }
             }
-            fwrite(&count, sizeof(int), 1, stdout);
-            fwrite("\n", sizeof(char), 1, stdout);
+            // fwrite(&count, sizeof(int), 1, stdout);
+            // fwrite("\n", sizeof(char), 1, stdout);
             free(lines[i]);
         }
         // Frees the used memory that is used for the list itself.
@@ -169,6 +168,11 @@ int main(int argc, char *argv[])
 
         // Closes the opened input file.
         fclose(file);
+    }
+
+    if (count > 0) {
+        fwrite(&count, sizeof(int), 1, stdout);
+        fwrite(&lastChar, sizeof(char), 1, stdout);
     }
     // If the program finishes successfully, the code will return 0
     return 0;
