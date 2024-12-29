@@ -23,8 +23,8 @@ void grepInputstream(char *searchterm)
     }
 
     // We print guide for the user
-    fprintf(stdout, "Write words to grep\n");
-    fprintf(stdout, "Enter to stop\n");
+    // fprintf(stdout, "Write words to grep\n");
+    // fprintf(stdout, "Enter to stop\n");
     // Defining starting variables to keepup with the sizes of the list and the string that is inserted into the list. Both are used as indexes.
     size_t lineCount = 0;
     size_t charCount = 0;
@@ -35,6 +35,24 @@ void grepInputstream(char *searchterm)
     while (true)
     {
         c = getchar();
+
+        if (c == EOF){
+        // If end of file is encountered, process the final line
+            if (charCount != 0)
+            {
+                lines[lineCount] = realloc(lines[lineCount], charCount + 2);
+                if (!lines[lineCount])
+                {
+                    fprintf(stderr, "realloc failed\n");
+                    exit(1);
+                }
+                lines[lineCount][charCount] = '\n';
+                lines[lineCount][charCount] = '\0';
+                lineCount++;
+            }
+            break;
+        }
+
         // If the latest character the program reads is a newline and a new line it allocates memory for a newline and a null terminate and breaks the loop.
         if (c == '\n' && charCount == 0)
         {
@@ -121,7 +139,7 @@ void grepInputstream(char *searchterm)
         exit(1);
     }
     // Program prints the strings from inside the list in reverse order. Also it frees up the space that is allocated for the strings inside the list.
-    fprintf(stdout, "Here is the lines with the searchterm '%s':\n\n", searchterm);
+    // fprintf(stdout, "Here is the lines with the searchterm '%s':\n\n", searchterm);
     // Program prints the line if the searchterm is found. It also frees the memory allocated for the list.
     for (int i = 0; i < lineCount; i++)
     {
@@ -138,7 +156,6 @@ void grepInputstream(char *searchterm)
 // Function to grep a file/multiple files
 int main(int argc, char *argv[])
 {
-    printf("%s", argv[1]);
     // Handling the case if the user does not give any arguments.
     if (argc == 1)
     {
@@ -284,7 +301,7 @@ int main(int argc, char *argv[])
             {
                 if (strstr(lines[i], argv[1]) != 0)
                 {
-                    printf("%s", lines[i]);
+                    fprintf(stdout, "%s", lines[i]);
                 }
                 free(lines[i]);
             }
